@@ -43,6 +43,24 @@
 
       app.controller("Main", ["$scope", MainController]);
 
+      function wrap(data) {
+          var observable = {};
+
+          Object.keys(data).forEach(function(property) {
+              Object.defineProperty(observable, property, {
+                  get: function() {
+                      return data[property];
+                  },
+                  set: function(value) {
+                      data[property] = value;
+                      data.dirty = true;
+                  }
+              });
+          });
+
+          return observable;
+      }
+
       function MainController($scope) {
           $scope.customerDS = new kendo.data.DataSource({
               type: "jsdo",
@@ -56,7 +74,7 @@
           });
 
           $scope.selectCustomer = function(customer) {
-              $scope.selection = customer;
+              $scope.selection = wrap(customer);
           };
 
           $scope.save = function() {
@@ -73,15 +91,20 @@
                   pageSize: 10,
                   buttonCount: 5
               },
-              editable: "inline",
-              toolbar: ["create"],
               columns: [
                   { field: "CustNum", title: "Cust Num", type: "number", width: 100 },
                   { field: "Name" },
                   { field: "State" },
                   { field: "Country" },
-                  { command: ["edit", "destroy"], title: "&nbsp;", width: "250px" }
-              ]
+                  { command: ["destroy"], title: "&nbsp;", width: "250px" }
+              ],
+
+              dataBound: function() {
+                  if ($scope.selection) {
+                      var dataItem = this.dataSource.get($scope.selection._id);
+                      this.select(this.tbody.find("[data-uid='" + dataItem.uid + "']"));
+                  }
+              }
           };
       }
     </script>
