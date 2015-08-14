@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Untitled</title>
+
+    <link rel="stylesheet" href="http://kendo.cdn.telerik.com/2015.2.805/styles/kendo.common.min.css">
+    <link rel="stylesheet" href="http://kendo.cdn.telerik.com/2015.2.805/styles/kendo.default.min.css">
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script src="http://kendo.cdn.telerik.com/2015.2.805/js/angular.min.js"></script>
+    <script src="http://kendo.cdn.telerik.com/2015.2.805/js/kendo.web.min.js"></script>
+    <script src="http://oemobiledemo.progress.com/jsdo/progress.all.min.js"></script>
+  </head>
+  <body ng-app="app" ng-controller="Main">
+    <div kendo-grid k-options="gridOptions" k-on-change="selectCustomer(dataItem)"></div>
+    <form ng-show="selection" ng-submit="save()">
+        <fieldset>
+            <legend>Details for {{selection.CustNum}}</legend>
+            <div>
+                <label for="Name">Name: </label><input ng-model="selection.Name" id="Name">
+            </div>
+            <div>
+                <label for="Sate">State: </label><input ng-model="selection.State" id="Sate">
+            </div>
+            <div>
+                <label for="Country">Country: </label><input ng-model="selection.Country" id="Country">
+            </div>
+            <div>
+                <button type="submit">Save</button>
+            </div>
+        </fieldset>
+    </form>
+    <script>
+      var serviceURI = 'http://oemobiledemo.progress.com/CustomerService';
+      var catalogURI = 'http://oemobiledemo.progress.com/CustomerService/static/mobile/CustomerService.json';
+      var resourceName = 'Customer';
+
+      var session = new progress.data.Session();
+      session.login(serviceURI, "", "");
+      session.addCatalog(catalogURI);
+
+      var app = angular.module("app", ["kendo.directives"]);
+
+      app.controller("Main", ["$scope", MainController]);
+
+      function MainController($scope) {
+          $scope.customerDS = new kendo.data.DataSource({
+              type: "jsdo",
+              transport: {
+                  jsdo: resourceName
+              },
+              error: function (e) {
+                  console.log('Error: ', e);
+              },
+              pageSize: 10
+          });
+
+          $scope.selectCustomer = function(customer) {
+              $scope.selection = customer;
+          };
+
+          $scope.save = function() {
+              $scope.customerDS.sync();
+          };
+
+          $scope.gridOptions = {
+              dataSource: $scope.customerDS,
+              selectable: "row",
+              height: 350,
+              pageable: {
+                  refresh: true,
+                  pageSizes: true,
+                  pageSize: 10,
+                  buttonCount: 5
+              },
+              editable: "inline",
+              toolbar: ["create"],
+              columns: [
+                  { field: "CustNum", title: "Cust Num", type: "number", width: 100 },
+                  { field: "Name" },
+                  { field: "State" },
+                  { field: "Country" },
+                  { command: ["edit", "destroy"], title: "&nbsp;", width: "250px" }
+              ]
+          };
+      }
+    </script>
+  </body>
+</html>
